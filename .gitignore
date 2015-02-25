@@ -1,0 +1,7 @@
+/checkstyle-*
+/findbugs-*
+ai/
+testing/
+*.jar
+*.txt
+*.pdf
