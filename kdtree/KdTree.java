@@ -34,10 +34,10 @@ public class KdTree
         /**
          * Constructor for descendant node of the parent.
          */
-        Node(Point2D point, Node parent, boolean orientation, boolean position)
+        Node(double x, double y, Node parent, boolean orientation, boolean position)
         {            
-            x = point.x();
-            y = point.y();
+            this.x = x;
+            this.y = y;
             
             xmin = parent.xmin; 
             ymin = parent.ymin; 
@@ -62,7 +62,7 @@ public class KdTree
         /**
          * Test if given rectangle intersects with splitting line of the node.
          */
-        boolean intersects(RectHV rect, boolean orientation)
+        boolean intersectsLine(RectHV rect, boolean orientation)
         {
             if (orientation == HORIZONTAL) {
                 return xmax >= rect.xmin() && y >= rect.ymin() && rect.xmax() >= xmin && rect.ymax() >= y;
@@ -86,29 +86,29 @@ public class KdTree
         /**
          * Closest distance to the point from node's rectangle.
          */
-        double distanceSquaredTo(Point2D p) 
+        double distanceSquaredTo(double x, double y) 
         {
             double dx = 0.0, dy = 0.0;
             
-            if (p.x() < xmin) { 
-                dx = p.x() - xmin;
-            } else if (p.x() > xmax) {
-                dx = p.x() - xmax;
+            if (x < xmin) { 
+                dx = x - xmin;
+            } else if (x > xmax) {
+                dx = x - xmax;
             }
             
-            if (p.y() < ymin) { 
-                dy = p.y() - ymin;
-            } else if (p.y() > ymax) { 
-                dy = p.y() - ymax;
+            if (y < ymin) { 
+                dy = y - ymin;
+            } else if (y > ymax) { 
+                dy = y - ymax;
             }
             
             return dx * dx + dy * dy;
         }
         
-        double distanceSquaredToPoint(Point2D p)
+        double distanceSquaredToPoint(double x, double y)
         {
-            double dx = x - p.x();
-            double dy = y - p.y();
+            double dx = this.x - x;
+            double dy = this.y - y;
             
             return dx * dx + dy * dy;
         }
@@ -116,19 +116,19 @@ public class KdTree
         /**
          * Test if current node contains the given point.
          */
-        boolean contains(Point2D p) 
+        boolean containsPoint(double x, double y) 
         {
-            return p.x() >= xmin && p.x() <= xmax && p.y() >= ymin && p.y() <= ymax;
+            return x >= xmin && x <= xmax && y >= ymin && y <= ymax;
         }
         
-        boolean pointEquals(Point2D p)
+        boolean pointEquals(double x, double y)
         {
-            return p.x() == x && p.y() == y;
+            return this.x == x && this.y == y;
         }
         
         boolean pointWithin(RectHV rect)
         {
-            return x >= rect.xmin() && x <= rect.xmax() && y >= rect.ymin() && y <= rect.ymax();
+            return rect.contains(createPoint());
         }
         
         Point2D createPoint()
@@ -231,22 +231,24 @@ public class KdTree
     }
     
     private int insert(Node node, Point2D point, boolean orientation)
-    {         
-        if (node.pointEquals(point)) {
+    {     
+        double x = point.x(), y = point.y();
+        
+        if (node.pointEquals(x, y)) {
             return 0;
         }
         
         int result = 1;
         
-        if ((orientation == HORIZONTAL && point.x() < node.x) || (orientation == VERTICAL && point.y() < node.y)) {
+        if ((orientation == HORIZONTAL && x < node.x) || (orientation == VERTICAL && y < node.y)) {
             if (node.left == null) {
-                node.left = new Node(point, node, orientation, LEFT);
+                node.left = new Node(x, y, node, orientation, LEFT);
             } else {
                 result = insert(node.left, point, !orientation);
             }
         } else {
             if (node.right == null) {
-                node.right = new Node(point, node, orientation, RIGHT);
+                node.right = new Node(x, y, node, orientation, RIGHT);
             } else {
                 result = insert(node.right, point, !orientation);
             }
@@ -259,11 +261,15 @@ public class KdTree
     {
         if (node == null) {
             return false;
-        } else if (node.pointEquals(point)) {
+        }
+        
+        double x = point.x(), y = point.y();
+        
+        if (node.pointEquals(x, y)) {
             return true;
         }
         
-        if ((orientation == HORIZONTAL && point.x() < node.x) || (orientation == VERTICAL && point.y() < node.y)) {
+        if ((orientation == HORIZONTAL && x < node.x) || (orientation == VERTICAL && y < node.y)) {
             return contains(node.left, point, !orientation);
         } else {
             return contains(node.right, point, !orientation);
@@ -281,7 +287,7 @@ public class KdTree
         // if it does, then recursively search both subtrees; otherwise, 
         // recursively search the one subtree where points intersecting the query rectangle could be.
         
-        if (node.intersects(rect, position)) {
+        if (node.intersectsLine(rect, position)) {
             if (node.pointWithin(rect)) {
                 queue.enqueue(node.createPoint());
             }         
@@ -323,19 +329,25 @@ public class KdTree
     }
     
     private Point2D nearest(Node node, Point2D point, double currentDistance)
-    {             
-        if (node == null || node.distanceSquaredTo(point) > currentDistance) {
+    {                     
+        if (node == null) {
+            return null;
+        }
+        
+        double x = point.x(), y = point.y();
+        
+        if (node.distanceSquaredTo(x, y) > currentDistance) {
             return null;
         }
         
         // Update min distance.
-        double distanceToPoint = node.distanceSquaredToPoint(point);
+        double distanceToPoint = node.distanceSquaredToPoint(x, y);
         double minDistance = distanceToPoint < currentDistance ? distanceToPoint : currentDistance;
         
         // Current result.
         Point2D result = null, left, right;
         
-        if (node.left != null && node.left.contains(point)) {
+        if (node.left != null && node.left.containsPoint(x, y)) {
             
             // Check left first.
             left = nearest(node.left, point, minDistance);
