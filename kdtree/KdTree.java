@@ -98,11 +98,11 @@ public class KdTree
             
             if (pointY < ymin) { 
                 dy = pointY - ymin;
-            } else if (y > ymax) { 
+            } else if (pointY > ymax) { 
                 dy = pointY - ymax;
             }
             
-            return dx * dx + dy * dy;
+            return dx * dx + dy * dy;            
         }
         
         double distanceSquaredToPoint(double pointX, double pointY)
