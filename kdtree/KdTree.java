@@ -86,29 +86,29 @@ public class KdTree
         /**
          * Closest distance to the point from node's rectangle.
          */
-        double distanceSquaredTo(double x, double y) 
+        double distanceSquaredTo(double pointX, double pointY) 
         {
             double dx = 0.0, dy = 0.0;
             
-            if (x < xmin) { 
-                dx = x - xmin;
-            } else if (x > xmax) {
-                dx = x - xmax;
+            if (pointX < xmin) { 
+                dx = pointX - xmin;
+            } else if (pointX > xmax) {
+                dx = pointX - xmax;
             }
             
-            if (y < ymin) { 
-                dy = y - ymin;
+            if (pointY < ymin) { 
+                dy = pointY - ymin;
             } else if (y > ymax) { 
-                dy = y - ymax;
+                dy = pointY - ymax;
             }
             
             return dx * dx + dy * dy;
         }
         
-        double distanceSquaredToPoint(double x, double y)
+        double distanceSquaredToPoint(double pointX, double pointY)
         {
-            double dx = this.x - x;
-            double dy = this.y - y;
+            double dx = x - pointX;
+            double dy = y - pointY;
             
             return dx * dx + dy * dy;
         }
@@ -116,14 +116,14 @@ public class KdTree
         /**
          * Test if current node contains the given point.
          */
-        boolean containsPoint(double x, double y) 
+        boolean containsPoint(double pointX, double pointY) 
         {
-            return x >= xmin && x <= xmax && y >= ymin && y <= ymax;
+            return pointX >= xmin && pointX <= xmax && pointY >= ymin && pointY <= ymax;
         }
         
-        boolean pointEquals(double x, double y)
+        boolean pointEquals(double pointX, double pointY)
         {
-            return this.x == x && this.y == y;
+            return x == pointX && y == pointY;
         }
         
         boolean pointWithin(RectHV rect)
